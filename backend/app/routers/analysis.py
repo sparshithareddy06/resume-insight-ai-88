@@ -408,7 +408,7 @@ async def get_all_analyses(
                 "id": str(analysis.id),
                 "job_title": analysis.job_title,
                 "match_score": analysis.match_score,
-                "created_at": analysis.created_at.isoformat() if analysis.created_at else None
+                "created_at": analysis.created_at if isinstance(analysis.created_at, str) else (analysis.created_at.isoformat() if analysis.created_at else None)
             })
         
         logger.info(
@@ -502,7 +502,7 @@ async def get_analysis(
             "ai_feedback": ai_feedback_dict,
             "matched_keywords": matched_keywords,
             "missing_keywords": missing_keywords,
-            "created_at": analysis.created_at.isoformat() if analysis.created_at else None
+            "created_at": analysis.created_at if isinstance(analysis.created_at, str) else (analysis.created_at.isoformat() if analysis.created_at else None)
         }
         
         logger.info(

@@ -72,38 +72,17 @@ async def upload_resume(
             confidence_score=processed_doc.confidence_score
         )
         
-        # Create user directly in auth.users table for testing
-        print("DEBUG: Creating user in auth.users table...")
+        # Upsert user profile via Supabase REST client
+        print("DEBUG: Upserting user profile...")
         try:
-            async with db_service.connection_manager.get_connection() as conn:
-                # First, try to insert into auth.users table
-                await conn.execute(
-                    """
-                    INSERT INTO auth.users (id, email, created_at, updated_at, email_confirmed_at)
-                    VALUES ($1, $2, NOW(), NOW(), NOW())
-                    ON CONFLICT (id) DO NOTHING
-                    """,
-                    UUID(user_id),
-                    "test@example.com"
-                )
-                print("DEBUG: User created in auth.users")
-                
-                # Then create profile
-                await conn.execute(
-                    """
-                    INSERT INTO profiles (id, email, full_name, avatar_url)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (id) DO NOTHING
-                    """,
-                    UUID(user_id),
-                    "test@example.com",
-                    "Test User",
-                    ""
-                )
-                print("DEBUG: Profile created")
+            from app.models.entities import UserProfile
+            await db_service.users.create_user_profile(
+                UserProfile(id=UUID(user_id), email="")
+            )
+            print("DEBUG: Profile upserted")
         except Exception as e:
             print(f"DEBUG: User/profile creation failed: {e}")
-            # Continue anyway
+            # Non-fatal — continue
         
         # Create resume record in database
         resume_id = uuid4()
@@ -142,7 +121,11 @@ async def upload_resume(
                 "processing_method": processed_doc.processing_method,
                 "confidence_score": processed_doc.confidence_score,
                 "text_length": len(processed_doc.text),
-                "uploaded_at": created_resume.uploaded_at.isoformat() if created_resume.uploaded_at else None
+                "uploaded_at": (
+                    created_resume.uploaded_at
+                    if isinstance(created_resume.uploaded_at, str)
+                    else created_resume.uploaded_at.isoformat()
+                ) if created_resume.uploaded_at else None
             }
             
             print("DEBUG: Response data created successfully")
@@ -291,7 +274,11 @@ async def get_user_resumes(
                 "resume_id": str(resume.id),
                 "file_name": resume.file_name,
                 "text_length": len(resume.parsed_text) if resume.parsed_text else 0,
-                "uploaded_at": resume.uploaded_at.isoformat()
+                "uploaded_at": (
+                    resume.uploaded_at
+                    if isinstance(resume.uploaded_at, str)
+                    else resume.uploaded_at.isoformat()
+                ) if resume.uploaded_at else None
             }
             for resume in resumes
         ]

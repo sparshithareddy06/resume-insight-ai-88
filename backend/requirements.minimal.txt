@@ -1,0 +1,33 @@
+# Ultra-Minimal Requirements for Fly.io (Under 8GB Guaranteed)
+# Core functionality with lightweight ML
+
+# Essential web framework
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Authentication (minimal)
+PyJWT==2.8.0
+python-jose==3.3.0
+
+# Database and services
+asyncpg==0.29.0
+supabase==2.3.0
+google-generativeai==0.3.2
+
+# Logging (essential only)
+structlog==23.2.0
+psutil==5.9.6
+
+# Document processing (core)
+pdfplumber==0.10.0
+python-docx==1.1.0
+
+# Lightweight ML stack
+numpy==1.24.3
+scikit-learn==1.3.2
+torch==2.1.0+cpu --index-url https://download.pytorch.org/whl/cpu
+transformers==4.35.0
+sentence-transformers==2.2.2
