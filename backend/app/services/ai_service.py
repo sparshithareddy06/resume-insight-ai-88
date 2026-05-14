@@ -9,8 +9,8 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from enum import Enum
 
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google import genai
+from google.genai import types as genai_types
 
 from app.config import settings
 from app.core.exceptions import AIServiceError, APIRateLimitError
@@ -104,29 +104,16 @@ class GeminiClient:
         # Check if API key is properly configured
         if not self.api_key or self.api_key == "your-google-gemini-api-key":
             logger.warning("Google Gemini API key not configured - AI feedback will be simulated")
-            self.model = None
+            self.client = None
             return
         
-        # Configure Gemini API
+        # Configure Gemini API with new SDK
         try:
-            genai.configure(api_key=self.api_key)
+            self.client = genai.Client(api_key=self.api_key)
+            logger.info("gemini_client_initialized", model_name=self.model_name)
         except Exception as e:
             logger.error("Failed to configure Gemini API", error=str(e))
-            self.model = None
-            return
-        
-        # Initialize model with safety settings
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            }
-        )
-        
-        logger.info("gemini_client_initialized", model_name=self.model_name)
+            self.client = None
     
     async def generate_response(self, prompt: str) -> str:
         """
@@ -143,7 +130,7 @@ class GeminiClient:
             APIRateLimitError: If rate limit is exceeded
         """
         # Fallback if API key is not configured
-        if self.model is None:
+        if self.client is None:
             logger.info("Using simulated AI feedback - API key not configured")
             return self._generate_simulated_feedback(prompt)
         
@@ -165,10 +152,11 @@ class GeminiClient:
                     prompt_length=len(prompt)
                 )
                 
-                # Generate response
+                # Generate response using new SDK
                 response = await asyncio.to_thread(
-                    self.model.generate_content,
-                    prompt
+                    self.client.models.generate_content,
+                    model=self.model_name,
+                    contents=prompt
                 )
                 
                 # Validate response

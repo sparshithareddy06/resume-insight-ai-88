@@ -55,13 +55,13 @@ SmartResume AI is a comprehensive, AI-powered resume analysis platform that tran
 FastAPI 0.104.1          # Modern web framework
 uvicorn[standard] 0.24.0 # ASGI server
 pydantic 2.5.0           # Data validation
-supabase 2.3.0           # Database and auth
+supabase >= 2.3.0        # Supabase Python client (REST API)
 torch 2.1.0+cpu          # Machine learning
 transformers 4.35.0      # NLP models
 tensorflow-cpu 2.15.0    # Deep learning
 sentence-transformers    # Semantic embeddings
-spacy 3.7.2             # NLP processing
-google-generativeai     # Gemini AI integration
+spacy >= 3.8.0           # NLP processing (en_core_web_sm)
+google-genai             # New official Gemini AI integration
 ```
 
 ### Frontend Dependencies
